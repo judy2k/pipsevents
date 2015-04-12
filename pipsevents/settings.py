@@ -13,7 +13,7 @@ import os
 
 root = environ.Path(__file__) - 2 # two folders back (/a/b/ - 3 = /)
 # remove reading .env for heroku
-environ.Env.read_env(root('pipsevents/.env'))  # reading .env file
+# environ.Env.read_env(root('pipsevents/.env')) # reading .env file
 
 BASE_DIR = root()
 #
@@ -255,11 +255,11 @@ CKEDITOR_IMAGE_BACKEND = 'pillow'
 CKEDITOR_CONFIGS = {
     'default': {
         'toolbar': [
-		 ['Source', '-', 'Bold', 'Italic', 'Underline', 'TextColor', 'BGColor'],
-         ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-',
-          'JustifyLeft', 'JustifyCenter', 'JustifyRight', '-',
-          'Table', 'HorizontalRule', 'Smiley', 'SpecialChar'],
-         ['Format', 'Font', 'FontSize']
+        ['Source', '-', 'Bold', 'Italic', 'Underline', 'TextColor', 'BGColor'],
+            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-',
+            'JustifyLeft', 'JustifyCenter', 'JustifyRight', '-',
+            'Table', 'HorizontalRule', 'Smiley', 'SpecialChar'],
+            ['Format', 'Font', 'FontSize']
         ],
         # 'height': 300,
         'width': 350,
