@@ -132,20 +132,6 @@ DATABASES = {
     'default': dj_database_url.config(), # Raises ImproperlyConfigured exception if DATABASE_URL not in os.environ
 }
 
-if 'TRAVIS' in os.environ:
-    DATABASES = {
-        'default': {
-            'ENGINE':   'django.db.backends.postgresql_psycopg2',
-            'NAME':     'travis_ci_test',
-            'USER':     'postgres',
-            'PASSWORD': '',
-            'HOST':     'localhost',
-            'PORT':     '',
-        }
-    }
-    SECRET_KEY = 'dummy_secret'
-    EMAIL_HOST_PASSWORD = 'dummy_password'
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
 
@@ -179,6 +165,51 @@ if EMAIL_HOST_PASSWORD == None:
 EMAIL_PORT = 587
 DEFAULT_FROM_EMAIL = 'watermelon.bookings@gmail.com'
 DEFAULT_STUDIO_EMAIL = 'watermelonstudiotest@gmail.com' #password watermel0n
+
+
+#####LOGGING######
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[%(levelname)s] - %(asctime)s - %(name)s - %(message)s',
+            'datefmt' : '%Y-%m-%d %H:%M:%S',
+        }
+    },
+    'handlers': {
+        'file_django': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': '/var/log/pipsevents/django.log',
+        },
+        'file_app': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': '/var/log/pipsevents/pipsevents.log',
+            'formatter': 'verbose'
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        }
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['file_django'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'booking': {
+            'handlers': ['console', 'file_app'],
+            'level': 'INFO',
+            'propogate': True,
+        }
+    },
+}
+
 
 #####HEROKU#######
 
@@ -297,3 +328,42 @@ if DEBUG:
 # DJANGO-PAYPAL
 PAYPAL_RECEIVER_EMAIL = 'test-paypal@watermelon.com'
 PAYPAL_TEST = True
+
+
+# TRAVIS
+if 'TRAVIS' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE':   'django.db.backends.postgresql_psycopg2',
+            'NAME':     'travis_ci_test',
+            'USER':     'postgres',
+            'PASSWORD': '',
+            'HOST':     'localhost',
+            'PORT':     '',
+        }
+    }
+    SECRET_KEY = 'dummy_secret'
+    EMAIL_HOST_PASSWORD = 'dummy_password'
+
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+            }
+        },
+        'loggers': {
+            'django.request': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propagate': True,
+            },
+            'booking': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propogate': True,
+            }
+        },
+    }
