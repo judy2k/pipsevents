@@ -1,6 +1,9 @@
 import urllib.parse
 import ast
+import logging
+
 from functools import wraps
+
 
 from django.db.utils import IntegrityError
 from django import forms
@@ -30,6 +33,9 @@ from studioadmin.forms import ConfirmPaymentForm, EventFormSet, \
     TimetableSessionFormSet, SessionAdminForm, DAY_CHOICES, \
     UploadTimetableForm, EmailUsersForm, ChooseUsersFormSet, UserFilterForm, \
     BlockStatusFilter, UserBookingFormSet, UserBlockFormSet
+
+
+logger = logging.getLogger(__name__)
 
 
 def staff_required(func):
@@ -95,7 +101,9 @@ class ConfirmPaymentView(LoginRequiredMixin, StaffUserMixin, UpdateView):
                 [self.request.user.email],
                 fail_silently=False)
             # TODO implenent templates
-
+            logger.info('Payment status for booking id {}, user {} has been '
+                        'updated by admin user {}'.format(
+                booking.id, booking.user.username, self.request.user.username))
         else:
             messages.info(
                 self.request, "Saved without making changes to the payment "
@@ -140,6 +148,9 @@ class ConfirmRefundView(LoginRequiredMixin, StaffUserMixin, UpdateView):
                 [self.request.user.email],
                 fail_silently=False)
             # TODO implenent templates
+            logger.info('Payment refund for booking id {}, user {} has been '
+                        'updated by admin user {}'.format(
+                booking.id, booking.user.username, self.request.user.username))
 
         if 'cancelled' in self.request.POST:
             messages.info(
@@ -187,7 +198,10 @@ def register_view(request, event_slug, status_choice='OPEN', print_view=False):
                                 booking.user.username
                             )
                         )
-
+                        logger.info('Booking id {}, user {} has been updated '
+                                    'by admin user {}'.format(
+                            booking.id, booking.user.username,
+                            request.user.username))
                     for error in form.errors:
                         messages.error(request, "{}".format(error),
                                        extra_tags='safe')
@@ -288,6 +302,8 @@ def event_admin_list(request, ev_type):
                                 ),
                                 extra_tags='safe'
                             )
+                            logger.info('Session {} (id {}) deleted by admin user {}'.format(
+                                form.instance, form.instance.id, request.user.username))
                         else:
                             for field in form.changed_data:
                                 messages.info(
@@ -299,6 +315,8 @@ def event_admin_list(request, ev_type):
                                         ),
                                     extra_tags='safe'
                                 )
+                                logger.info('Session {} (id {}) updated by admin user {}'.format(
+                                form.instance, form.instance.id, request.user.username))
                         form.save()
 
                     for error in form.errors:
@@ -384,6 +402,8 @@ class EventAdminUpdateView(LoginRequiredMixin, StaffUserMixin, UpdateView):
             msg = '<strong>{} {}</strong> has been updated!'.format(
                 msg_ev_type, event.name
             )
+            logger.info('{} {} (id {}) updated by admin user {}'.format(
+                msg_ev_type, event, event.id, self.request.user.username))
         else:
             msg = 'No changes made'
         messages.info(self.request, msg, extra_tags='safe')
@@ -420,18 +440,12 @@ class EventAdminCreateView(LoginRequiredMixin, StaffUserMixin, CreateView):
         messages.info(self.request, '<strong>{} {}</strong> has been '
                                     'created!'.format(msg_ev_type, event.name),
                       extra_tags='safe')
+        logger.info('{} {} (id {}) created by admin user {}'.format(
+            msg_ev_type, event, event.id, self.request.user.username))
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('studioadmin:{}'.format(self.kwargs["ev_type"] + 's'))
-
-
-class EventAdminDeleteView(LoginRequiredMixin, StaffUserMixin, DeleteView):
-    # Allow deleting; if bookings made, show warning, cancel bookings, email
-    # users and studio with refund info and cancel event rather than deleting.
-    # Need to add event status open/cancelled to model
-
-    pass
 
 
 @login_required
@@ -457,6 +471,8 @@ def timetable_admin_list(request):
                                 ),
                                 extra_tags='safe'
                             )
+                            logger.info('Session {} (id {}) deleted by admin user {}'.format(
+                                form.instance, form.instance.id, request.user.username))
                         else:
                             for field in form.changed_data:
                                 messages.info(
@@ -468,6 +484,8 @@ def timetable_admin_list(request):
                                         ),
                                     extra_tags='safe'
                                 )
+                                logger.info('Session {} (id {}) updated by admin user {}'.format(
+                                form.instance, form.instance.id, request.user.username))
                         form.save()
 
                     for error in form.errors:
@@ -526,6 +544,8 @@ class TimetableSessionUpdateView(
                 session.name, DAY_CHOICES[session.day],
                 session.time.strftime('%H:%M')
             )
+            logger.info('Session {} (id {}) updated by admin user {}'.format(
+                session, session.id, self.request.user.username))
         else:
             msg = 'No changes made'
         messages.info(self.request, msg, extra_tags='safe')
@@ -557,6 +577,8 @@ class TimetableSessionCreateView(
             session.name, DAY_CHOICES[session.day],
             session.time.strftime('%H:%M')
         )
+        logger.info('Session {} (id {}) created by admin user {}'.format(
+                session, session.id, self.request.user.username))
         messages.info(self.request, msg, extra_tags='safe')
         return HttpResponseRedirect(self.get_success_url())
 
@@ -581,6 +603,8 @@ def upload_timetable_view(request,
                        'created_classes': created_classes,
                        'existing_classes': existing_classes,
                        'sidenav_selection': 'upload_timetable'}
+            logger.info('Timetable uploaded by admin user {}'.format(
+                request.user.username))
             return render(
                 request, 'studioadmin/upload_timetable_confirmation.html',
                 context
@@ -764,6 +788,8 @@ def email_users_view(request,
                                       'message': message})
                               ),
                               fail_silently=False)
+                logger.info('Bulk email with subject "{}" sent to users {} by admin user {}'.format(
+                    subject, email_addresses, request.user.username))
 
                 return render(request,
                     'studioadmin/email_users_confirmation.html')
@@ -846,10 +872,18 @@ def user_bookings_view(request, user_id):
                             request,
                             'Booking for {} has been {}'.format(booking.event, msg)
                         )
+                        logger.info('Booking id {} (user {}) for "{}" updated '
+                                    'by admin user {}'.format(
+                            booking.id, booking.user.username, booking.event,
+                            request.user.username))
                         if reopened:
                             messages.info(
                                 request, 'Note: this booking was previously '
                                 'cancelled and has now been reopened')
+                            logger.info('Booking id {} was previously '
+                                        'cancelled and has now been reopened'
+                                        'by admin user {}'.format(
+                                booking.id, request.user.username))
                         booking.save()
 
                     for error in form.errors:
@@ -922,7 +956,9 @@ def user_blocks_view(request, user_id):
                             'Block for {} has been {}'.format(block.block_type.event_type, msg)
                         )
                         block.save()
-
+                        logger.info('Block id {}, user {}, has been {}'
+                                    ' by admin user {}'.format(
+                            block.id, block.user.username, msg, request.user.username))
                     for error in form.errors:
                         messages.error(request, "{}".format(error),
                                        extra_tags='safe')

@@ -206,7 +206,22 @@ LOGGING = {
             'handlers': ['console', 'file_app'],
             'level': 'INFO',
             'propogate': True,
-        }
+        },
+        'payments': {
+            'handlers': ['console', 'file_app'],
+            'level': 'INFO',
+            'propogate': True,
+        },
+        'studioadmin': {
+            'handlers': ['console', 'file_app'],
+            'level': 'INFO',
+            'propogate': True,
+        },
+        'timetable': {
+            'handlers': ['console', 'file_app'],
+            'level': 'INFO',
+            'propogate': True,
+        },
     },
 }
 
@@ -364,6 +379,21 @@ if 'TRAVIS' in os.environ:
                 'handlers': ['console'],
                 'level': 'INFO',
                 'propogate': True,
-            }
+            },
+            'payments': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propogate': True,
+            },
+            'studioadmin': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propogate': True,
+            },
+            'timetable': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propogate': True,
+            },
         },
     }
